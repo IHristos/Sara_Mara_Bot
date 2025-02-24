@@ -1,73 +1,67 @@
 # Sara_Mara_Bot
 Discord Bot
 
-This README file will guide you through installing the necessary packages and dependencies, so you can successfully run the index.js file and operate your Bot on your Discord Server.
+This <s>README</s> file will guide you through installing the necessary packages and dependencies, so you can successfully run the index.js file and operate your Bot on your Discord Server.
 
-1. If you don't have the Node.js installed on your computer, then download and install Node.js from the official site:
 
-       Download Node.js from the official website:
-       👉 https://nodejs.org/
+1. If you don't have the Node.js installed on your computer, then download and install Node.js.
+   => Download Node.js from the official website:
+   
+       https://nodejs.org/
 
    To check if Node is installed, run in terminal:
 
         node --version
 
 
-
-
    
-2. If you don't have Python installed on your computer, then install Python (Required for yt-dlp) - yt-dlp requires Python to work - from the official site: 
-
-        Download Python from the official website:
-        👉 https://www.python.org/downloads/
+2. If you don't have Python installed on your computer, then install Python (Required for yt-dlp) - yt-dlp requires Python to work.
+   => Download Python from the official website:
+   
+        https://www.python.org/downloads/
 
     To check if Python is installed, run in terminal:
 
         python --version
 
 
-
-
       
-3. Install FFmpeg (Required for Audio Processing):
+3. Download and Install FFmpeg (Required for Audio Processing):
 
    3.1) Download FFmpeg from:
    
-       👉 https://ffmpeg.org/download.html
+       https://ffmpeg.org/download.html
    
-       Choose Windows > Windows Builds.
-       Click on the latest release, then download the "full" build.
-       Extract the ZIP file to C:\ffmpeg.
+   => Choose Windows > Windows Builds.
+   => Click on the latest release, then download the "full" build.
+   => Extract the ZIP file to C:\ffmpeg.
    
-       To check if FFmpeg is installed, run in terminal:
+    To check if FFmpeg is installed, run in terminal:
 
         ffmpeg -version
    
    3.2) Add FFmpeg to your system’s PATH:
 
-        Open Start → Search for "Edit the system environment variables".
-        Click Environment Variables.
-        Under System Variables, find Path → Click Edit.
-        Click New, then add:
+   => Open Start → Search for "Edit the system environment variables".
+   => Click Environment Variables.
+   => Under System Variables, find Path → Click Edit.
+   => Click New, then add:
 
         C:\ffmpeg\bin
 
-        Click OK to save and close.
+   => Click OK to save and close.
 
 
 
+   4. Install Git (Required for yt-dlp).
+      => Download Git from the official website:
 
-
-   4. Install Git (Required for yt-dlp):
-
-           Download Git from the official website:
-          👉 https://git-scm.com/downloads
+              https://git-scm.com/downloads
       
-      Install Git
-      After Git installation to check if Git is properly installed, run in terminal:
+      => Install Git
+      => After Git installation to check if Git is properly installed, run in terminal:
       
           git --version
-
 
 
 
@@ -98,7 +92,7 @@ This README file will guide you through installing the necessary packages and de
 
 
 
-     7. Make sure you have in the js code the correct Bot Token:
+     6. Make sure you have in the js code the correct Bot Token:
 
         => open your js file and find the following variable:
 
@@ -111,26 +105,31 @@ This README file will guide you through installing the necessary packages and de
 
         7. Run the Bot in Terminal:
        
-           7.1 Navigate in terminal to your Bot directory:
+           8.1 Navigate in terminal to your Bot directory:
 
                cd C:\path\to\your\bot\folder
 
            7.2 While in terminal run the node file:
 
                node index.js
-               OR
+           
+            OR if you used another naming:
+           
                node yourBotFileName.js
-
-
+  
 
 
           8. Invite your Bot to your Discord Server and give it the right permissions:
        
              8.1 Go to Discord Developer Portal
+             
              8.2 Select your Bot application
+             
              8.3 Go to the OAuth2 tab → URL Generator
+             
              8.4 Select bot and applications.commands
-             8.5 Under Bot Permissions, select:
+             
+             8.5 Under Bot Permissions, check the following boxes:
        
                     View Channels
                     Read Messages
@@ -143,6 +142,7 @@ This README file will guide you through installing the necessary packages and de
                      Administrator
              
                8.6 Copy the generated URL and paste it into your browser.
+             
                8.7 Select your server and invite the bot.
 
 
