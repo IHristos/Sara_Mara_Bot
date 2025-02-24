@@ -14,11 +14,11 @@ This <b>README</b> file will guide you through installing the necessary packages
         node --version
 
 
-   <p>ff</p>
-   <p>f</p>
-   <p>f</p>
-   <p>f</p>
-   <p>f</p>
+   <p> </p>
+   <p> </p>
+   <p> </p>
+   <p> </p>
+   <p> </p>
 2. If you don't have Python installed on your computer, then install Python (Required for yt-dlp) - yt-dlp requires Python to work.
    => Download Python from the official website:
    
