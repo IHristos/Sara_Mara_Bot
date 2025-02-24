@@ -2,7 +2,7 @@
 Discord Bot
 
 This <b>README</b> file will guide you through installing the necessary packages and dependencies, so you can successfully run the index.js file and operate your Bot on your Discord Server.
-<p></p>
+<h1>This is a test</h1>
 
 1. If you don't have the Node.js installed on your computer, then download and install Node.js.
    => Download Node.js from the official website:
@@ -14,11 +14,6 @@ This <b>README</b> file will guide you through installing the necessary packages
         node --version
 
 
-   <p> </p>
-   <p> </p>
-   <p> </p>
-   <p> </p>
-   <p> </p>
 2. If you don't have Python installed on your computer, then install Python (Required for yt-dlp) - yt-dlp requires Python to work.
    => Download Python from the official website:
    
