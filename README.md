@@ -33,7 +33,9 @@ This <b>README</b> file will guide you through installing the necessary packages
    
    => Choose Windows > Windows Builds.
    => Click on the latest release, then download the "full" build.
-   => Extract the ZIP file to C:\ffmpeg.
+   => Extract the ZIP file to
+
+       C:\ffmpeg.
    
     To check if FFmpeg is installed, run in terminal:
 
@@ -52,7 +54,7 @@ This <b>README</b> file will guide you through installing the necessary packages
 
 
 
-4. Install Git (Required for yt-dlp).
+5. Install Git (Required for yt-dlp).
    => Download Git from the official website:
 
         https://git-scm.com/downloads
@@ -64,7 +66,7 @@ This <b>README</b> file will guide you through installing the necessary packages
 
 
 
-5. Install Dependencies for the Bot:
+6. Install Dependencies for the Bot:
 
   5.1) Open Command Prompt (cmd) and navigate to the bot folder:
 
