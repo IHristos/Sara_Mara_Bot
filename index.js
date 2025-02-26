@@ -1,18 +1,21 @@
-const { 
-  joinVoiceChannel, 
-  createAudioPlayer, 
-  createAudioResource, 
+const {
+  joinVoiceChannel,
+  createAudioPlayer,
+  createAudioResource,
   AudioPlayerStatus,
-  NoSubscriberBehavior 
+  NoSubscriberBehavior
 } = require('@discordjs/voice');
+
 const { exec } = require('child_process');
-const { 
-  Client, 
-  GatewayIntentBits, 
-  SlashCommandBuilder, 
-  REST, 
-  Routes 
+
+const {
+  Client,
+  GatewayIntentBits,
+  SlashCommandBuilder,
+  REST,
+  Routes
 } = require('discord.js');
+
 const fetch = require('node-fetch');
 
 // Initialize the Discord bot client
@@ -23,8 +26,8 @@ const client = new Client({
   ],
 });
 
-const token = 'MTM0MzY1MTA5NzQxOTQ0ODM3MA.Gpo6HS.JzhFVL2a-oEBlJy_8krwbI8y6s9XkHBwr-RkbA'; // Replace with your bot token
-const clientId = '1343651097419448370'; // Replace with your application ID
+const token = 'MTM0MzY1MTA5NzQxOTQ0ODM3MA.Gpo6HS.JzhFVL2a-oEBlJy_8krwbI8y6s9XkHBwr-RkbA'; // BOT TOKEN
+const clientId = '1343651097419448370'; // Application ID (on Discord Developer Portal)
 
 // Map to store the queue of songs for each guild
 const queue = new Map();
@@ -34,13 +37,16 @@ const commands = [
   new SlashCommandBuilder()
     .setName('play')
     .setDescription('Play a song from YouTube')
-    .addStringOption(option => 
+    .addStringOption(option =>
       option.setName('song')
         .setDescription('The song URL or search term')
         .setRequired(true)),
   new SlashCommandBuilder()
     .setName('skip')
     .setDescription('Skip the current song'),
+  new SlashCommandBuilder()
+    .setName('stop')
+    .setDescription('Stop playing the current song'),
   new SlashCommandBuilder()
     .setName('autoplay')
     .setDescription('Toggle autoplay feature')
@@ -92,7 +98,7 @@ async function getSongInfo(songUrl) {
         console.error(`exec error: ${error}`);
         return reject('Failed to fetch song info');
       }
-      
+
       const lines = stdout.trim().split('\n');
       if (lines.length >= 2) {
         const title = lines[0];
@@ -108,38 +114,61 @@ async function getSongInfo(songUrl) {
 // Function to get YouTube's next recommended video
 async function getNextRecommendedVideo(videoId) {
   try {
-    // Use yt-dlp to get the next recommended video
+    // Use YouTube's radio/mix feature which provides a sequence of related songs
+    // The RD prefix creates an auto-generated playlist of related songs
+    const radioUrl = `https://www.youtube.com/watch?v=${videoId}&list=RD${videoId}`;
+    console.log(`Fetching recommendations from: ${radioUrl}`);
+
     return new Promise((resolve, reject) => {
-      exec(`yt-dlp --flat-playlist --dump-single-json https://www.youtube.com/watch?v=${videoId}`, (error, stdout, stderr) => {
+      // Use yt-dlp's playlist extraction with --playlist-items 2 to get just the second video
+      // (first is current, second is the next recommendation)
+      exec(`yt-dlp --flat-playlist --print "%(title)s::%(id)s" --playlist-items 2 "${radioUrl}"`, (error, stdout, stderr) => {
         if (error) {
           console.error(`exec error: ${error}`);
-          return reject('Failed to fetch recommendations');
+          return reject('Failed to fetch radio playlist');
         }
-        
+
         try {
-          const data = JSON.parse(stdout);
-          if (data.entries && data.entries.length > 0) {
-            // Get first recommended video from the related videos section
-            const nextVideo = data.entries[0];
-            resolve({
-              title: nextVideo.title,
-              url: `https://www.youtube.com/watch?v=${nextVideo.id}`
-            });
-          } else {
-            // Alternative approach using related videos section
-            if (data.related_videos && data.related_videos.length > 0) {
-              const nextVideo = data.related_videos[0];
+          // Split the output by lines - we want the second line
+          const lines = stdout.trim().split('\n');
+          console.log('Radio playlist results:', lines);
+
+          if (lines.length >= 2) {
+            // Get the second entry (index 1)
+            const secondEntry = lines[1];
+            const [title, id] = secondEntry.split('::');
+
+            if (title && id) {
               resolve({
-                title: nextVideo.title,
-                url: `https://www.youtube.com/watch?v=${nextVideo.id}`
+                title: title,
+                url: `https://www.youtube.com/watch?v=${id}`,
+                videoId: id
               });
             } else {
-              reject('No recommended videos found');
+              console.error('Invalid entry format:', secondEntry);
+              reject('Invalid recommendation format');
             }
+          } else if (lines.length === 1 && !lines[0].includes(videoId)) {
+            // If we only got one result and it's not the original video, use it
+            const [title, id] = lines[0].split('::');
+
+            if (title && id && id !== videoId) {
+              resolve({
+                title: title,
+                url: `https://www.youtube.com/watch?v=${id}`,
+                videoId: id
+              });
+            } else {
+              console.error('Single entry but not valid recommendation');
+              reject('No valid recommendations found');
+            }
+          } else {
+            console.error('No next video in playlist');
+            reject('No next song in radio playlist');
           }
         } catch (e) {
-          console.error('Error parsing JSON:', e);
-          reject('Failed to parse recommendations');
+          console.error('Error processing playlist output:', e);
+          reject('Failed to process playlist output');
         }
       });
     });
@@ -170,29 +199,29 @@ function joinVoiceChannelAndPlay(guild, channel) {
     if (serverQueue) {
       // Store the current song's videoId before removing it
       const currentSong = serverQueue.songs.shift();
-      
+
       if (serverQueue.songs.length > 0) {
         // Play the next song in queue if available
         playNextSong(guild);
       } else if (serverQueue.autoplay && currentSong && currentSong.videoId) {
         try {
           // Get and play the next recommended song from YouTube
+          console.log(`Finding recommendation for video ID: ${currentSong.videoId}`);
           const nextSong = await getNextRecommendedVideo(currentSong.videoId);
-          
+
           if (nextSong) {
-            // Get full song info
-            const songInfo = await getSongInfo(nextSong.url);
-            
+            console.log(`Next recommended song: ${nextSong.title} (${nextSong.videoId})`);
+
             // Add the recommended song to the queue
             serverQueue.songs.push({
               title: nextSong.title,
               url: nextSong.url,
-              videoId: songInfo.videoId
+              videoId: nextSong.videoId
             });
-            
+
             // Notify channel
             serverQueue.textChannel.send(`▶️ Autoplay: Now playing next recommended song: **${nextSong.title}**`);
-            
+
             // Play the song
             playNextSong(guild);
           }
@@ -215,24 +244,24 @@ async function playNextSong(guild) {
   }
 
   const song = serverQueue.songs[0];
-  
+
   try {
     const streamUrl = await getStreamUrl(song.url);
     console.log(`Now playing: ${song.title}, Stream URL: ${streamUrl}`);
-    
+
     const resource = createAudioResource(streamUrl);
     serverQueue.player.play(resource);
-    
+
     // Log the player state
     console.log(`Player state: ${serverQueue.player.state.status}`);
-    
+
     // Update current song title in the channel
     serverQueue.textChannel.send(`🎵 Now playing: **${song.title}**`);
-    
+
   } catch (error) {
     console.error('Error while playing the song:', error);
     serverQueue.textChannel.send(`❌ Error playing: ${song.title}`);
-    
+
     // Try the next song
     serverQueue.songs.shift();
     if (serverQueue.songs.length > 0) {
@@ -249,20 +278,20 @@ client.on('interactionCreate', async interaction => {
 
   if (commandName === 'play') {
     const songQuery = interaction.options.getString('song');
-    
+
     // Check if the user is in a voice channel
     if (!interaction.member.voice.channel) {
-      return interaction.reply({ 
-        content: 'You need to join a voice channel first!', 
-        ephemeral: true 
+      return interaction.reply({
+        content: 'You need to join a voice channel first!',
+        ephemeral: true
       });
     }
 
     try {
       await interaction.deferReply();
-      
+
       const voiceChannel = interaction.member.voice.channel;
-      
+
       // Initialize server queue if it doesn't exist
       if (!queue.has(interaction.guildId)) {
         const queueConstruct = {
@@ -273,38 +302,38 @@ client.on('interactionCreate', async interaction => {
           songs: [],
           autoplay: true, // Enable autoplay by default
         };
-        
+
         queue.set(interaction.guildId, queueConstruct);
-        
+
         // Set up voice connection and player
         const { connection, player } = joinVoiceChannelAndPlay(
-          interaction.guild, 
+          interaction.guild,
           voiceChannel
         );
-        
+
         queueConstruct.connection = connection;
         queueConstruct.player = player;
       }
-      
+
       const serverQueue = queue.get(interaction.guildId);
-      
+
       // Prepare song URL (direct link or search)
       const isSongUrl = songQuery.includes('youtube.com') || songQuery.includes('youtu.be');
       const searchUrl = isSongUrl ? songQuery : `ytsearch:${songQuery}`;
-      
+
       try {
         // Get song info
         const songInfo = await getSongInfo(searchUrl);
-        
+
         // Add song to queue
         const song = {
           title: songInfo.title,
           url: isSongUrl ? songQuery : `https://www.youtube.com/watch?v=${songInfo.videoId}`,
           videoId: songInfo.videoId
         };
-        
+
         serverQueue.songs.push(song);
-        
+
         // If this is the first song, start playing
         if (serverQueue.songs.length === 1) {
           await playNextSong(interaction.guild);
@@ -316,40 +345,54 @@ client.on('interactionCreate', async interaction => {
         console.error('Error getting song info:', error);
         await interaction.editReply('❌ Error: Could not find or process that song.');
       }
-      
+
     } catch (error) {
       console.error(error);
       await interaction.editReply('❌ There was an error processing your command!');
     }
   } else if (commandName === 'skip') {
     const serverQueue = queue.get(interaction.guildId);
-    
+
     if (!serverQueue) {
       return interaction.reply('❌ There is no song playing!');
     }
-    
+
     if (!interaction.member.voice.channel) {
       return interaction.reply('❌ You need to be in a voice channel to skip songs!');
     }
-    
+
     if (serverQueue.songs.length <= 1 && !serverQueue.autoplay) {
       return interaction.reply('❌ There are no more songs in the queue and autoplay is disabled!');
     }
-    
+
     // Skip the current song by making the player idle
     serverQueue.player.stop();
     return interaction.reply('⏭️ Skipped to the next song!');
-    
-  } else if (commandName === 'autoplay') {
+
+  } else if (commandName === 'stop') {
+    const serverQueue = queue.get(interaction.guildId);
+
+    if (!serverQueue) {
+      return interaction.reply('❌ There is no song playing!');
+    }
+
+    if (!interaction.member.voice.channel) {
+      return interaction.reply('❌ You need to be in a voice channel to skip songs!');
+    }
+
+    serverQueue.player.stop();
+    return interaction.reply('❌ The current song is stopped!');
+  }
+  else if (commandName === 'autoplay') {
     const enabled = interaction.options.getBoolean('enabled');
     const serverQueue = queue.get(interaction.guildId);
-    
+
     if (!serverQueue) {
       return interaction.reply('❌ Music playback has not been started yet!');
     }
-    
+
     serverQueue.autoplay = enabled;
-    
+
     if (enabled) {
       return interaction.reply('🔄 Autoplay has been enabled! The bot will play recommended songs when the queue ends.');
     } else {
