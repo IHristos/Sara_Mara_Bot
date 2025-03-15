@@ -1,7 +1,7 @@
 # Sara_Mara_Bot
 Discord Bot
 
-This <b>README</b> file will guide you through installing the necessary packages and dependencies, so you can successfully run the index.js file and operate your Bot on your Discord Server.
+This <b>README</b> file will guide you through installing the necessary packages and dependencies, so you can successfully run the index.js file and operate your Bot on your Discord Server. The Bot will be able to play audio from YouTube.
 
 
 1. If you don't have the Node.js installed on your computer, then download and install Node.js.
