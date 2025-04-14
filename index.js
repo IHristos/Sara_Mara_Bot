@@ -26,8 +26,8 @@ const client = new Client({
   ],
 });
 
-const token = 'MTM0MzY1MTA5NzQxOTQ0ODM3MA.Gpo6HS.JzhFVL2a-oEBlJy_8krwbI8y6s9XkHBwr-RkbA'; // BOT TOKEN
-const clientId = '1343651097419448370'; // Application ID (on Discord Developer Portal)
+const token = 'PlaceYourBotTokenHere'; // BOT TOKEN
+const clientId = 'PlaceYourAppIDHere'; // Application ID (on Discord Developer Portal)
 
 // Map to store the queue of songs for each guild
 const queue = new Map();
